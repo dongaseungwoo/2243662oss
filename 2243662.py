@@ -1,3 +1,9 @@
+from difflib import SequenceMatcher
+
+# 번호 정제 함수
+def clean_number(number):
+    return ''.join(filter(str.isdigit, number))
+
 # 동아대학교 학과 대표 번호
 special_numbers = {
     '0512007776': "동아대학교 컴퓨터공학과입니다.",
@@ -47,3 +53,37 @@ spam_numbers = [
     '029512005', '025381713', '0230199596', '025730903', '05074169375',
     '0269530792', '0269530793'
 ]
+
+# 📊 판단 함수
+def is_spam_or_special(user_number, spam_list, threshold_high=0.95, threshold_mid=0.7):
+    user_digits = clean_number(user_number)
+
+    # ✅ 동아대 특수 번호 확인
+    if user_digits in special_numbers:
+        return special_numbers[user_digits], 1.0
+
+    # ✅ 휴대폰 제외
+    if user_digits.startswith("010"):
+        return "✅ 010으로 시작하는 번호는 개인번호이므로 검사 대상에서 제외됩니다.", 0.0
+
+    # ✅ 번호 패턴 경고
+    if user_digits.startswith("02") and len(user_digits) > 2 and user_digits[2] in {'2', '3', '6'}:
+        return "🔴 스팸 가능성 높음 (02-2/3/6x 국번)", 1.0
+    if user_digits.startswith("070") and len(user_digits) > 3 and user_digits[3] in {'4', '7', '8'}:
+        return "🔴 스팸 가능성 매우 높음 (070-4/7/8 대역)", 1.0
+
+    # ✅ 유사도 계산
+    max_similarity = 0.0
+    for spam in spam_list:
+        score = SequenceMatcher(None, user_digits, clean_number(spam)).ratio()
+        max_similarity = max(max_similarity, score)
+
+    # ✅ 결과 반환
+    if max_similarity >= threshold_high:
+        result = "🔴 스팸 가능성 매우 높음"
+    elif max_similarity >= threshold_mid:
+        result = "🟠 스팸 가능성 있음"
+    else:
+        result = "🟢 스팸 가능성 낮음"
+
+    return result, round(max_similarity, 3)
