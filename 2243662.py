@@ -87,3 +87,11 @@ def is_spam_or_special(user_number, spam_list, threshold_high=0.95, threshold_mi
         result = "🟢 스팸 가능성 낮음"
 
     return result, round(max_similarity, 3)
+
+# 실행
+if __name__ == "__main__":
+    user_input = input("전화번호를 입력하세요 (예: 051-200-7776): ")
+    result, score = is_spam_or_special(user_input, spam_numbers)
+    print(f"\n입력번호: {user_input}")
+    print(f"유사도: {score*100:.1f}%")
+    print(f"판단: {result}")
